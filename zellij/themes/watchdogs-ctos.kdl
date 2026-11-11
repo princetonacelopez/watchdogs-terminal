@@ -1,0 +1,32 @@
+// =============================================================================
+// Watch Dogs ctOS 2.0 / DedSec Theme for Zellij 0.41+
+// Location: ~/.config/zellij/themes/watchdogs-ctos.kdl
+// Color Key:
+//   Obsidian BG:      7 9 14      (#07090E)
+//   Panel Dark BG:    17 25 38    (#111926)
+//   Frame Dim:        30 46 66    (#1E2E42)
+//   ctOS Cyan:        0 240 255   (#00F0FF)
+//   DedSec Crimson:   255 0 85    (#FF0055)
+//   Access Mint:      0 255 156   (#00FF9C)
+//   Profiler Amber:   255 214 0   (#FFD600)
+//   Ice Silver Text:  195 218 238 (#C3DAEE)
+// =============================================================================
+
+themes {
+    watchdogs-ctos {
+        text_unselected       { base 195 218 238; background 7 9 14;    emphasis_0 255 214 0; emphasis_1 0 240 255; emphasis_2 0 255 156; emphasis_3 255 0 85; }
+        text_selected         { base 7 9 14;      background 0 240 255; emphasis_0 7 9 14;    emphasis_1 7 9 14;    emphasis_2 7 9 14;    emphasis_3 255 0 85; }
+        ribbon_selected       { base 7 9 14;      background 0 240 255; emphasis_0 7 9 14;    emphasis_1 7 9 14;    emphasis_2 7 9 14;    emphasis_3 255 0 85; }
+        ribbon_unselected     { base 145 170 195; background 17 25 38;  emphasis_0 255 214 0; emphasis_1 0 240 255; emphasis_2 0 255 156; emphasis_3 255 0 85; }
+        table_title           { base 0 240 255;   background 0;         emphasis_0 255 214 0; emphasis_1 0 240 255; emphasis_2 0 255 156; emphasis_3 255 0 85; }
+        table_cell_selected   { base 7 9 14;      background 0 240 255; emphasis_0 7 9 14;    emphasis_1 7 9 14;    emphasis_2 7 9 14;    emphasis_3 255 0 85; }
+        table_cell_unselected { base 195 218 238; background 7 9 14;    emphasis_0 255 214 0; emphasis_1 0 240 255; emphasis_2 0 255 156; emphasis_3 255 0 85; }
+        list_selected         { base 7 9 14;      background 0 240 255; emphasis_0 7 9 14;    emphasis_1 7 9 14;    emphasis_2 7 9 14;    emphasis_3 255 0 85; }
+        list_unselected       { base 195 218 238; background 7 9 14;    emphasis_0 255 214 0; emphasis_1 0 240 255; emphasis_2 0 255 156; emphasis_3 255 0 85; }
+        frame_selected        { base 0 240 255;   background 0;         emphasis_0 255 214 0; emphasis_1 0 240 255; emphasis_2 0 255 156; emphasis_3 255 0 85; }
+        frame_unselected      { base 30 46 66;    background 0;         emphasis_0 30 46 66;  emphasis_1 0 240 255; emphasis_2 0 255 156; emphasis_3 255 0 85; }
+        frame_highlight       { base 255 0 85;    background 0;         emphasis_0 255 214 0; emphasis_1 0 240 255; emphasis_2 255 0 85;  emphasis_3 255 0 85; }
+        exit_code_success     { base 0 255 156;   background 0;         emphasis_0 0 255 156; emphasis_1 0 240 255; emphasis_2 0 255 156; emphasis_3 0 255 156; }
+        exit_code_error       { base 255 0 85;    background 0;         emphasis_0 255 0 85;  emphasis_1 255 0 85;  emphasis_2 255 0 85;  emphasis_3 255 0 85; }
+    }
+}

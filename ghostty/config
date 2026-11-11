@@ -1,0 +1,54 @@
+# =============================================================================
+# Ghostty Configuration — Watch Dogs ctOS 2.0 / DedSec Edition (Fedora 45)
+# Location: ~/.config/ghostty/config.ghostty
+# =============================================================================
+
+# --- Typography: Monospace Code + Watch Dogs "HACKED" Font on Bold Panel Titles ---
+# Installed from https://watchdogsfont.com/ -> ~/.local/share/fonts/HACKED.ttf
+font-family = "JetBrainsMono Nerd Font Mono"
+font-family-bold = "HACKED"
+
+# --- Window & Fullscreen Geometry ---
+window-theme = dark
+window-decoration = none
+gtk-titlebar = false
+fullscreen = true
+background-opacity = 0.94
+background-blur-radius = 24
+unfocused-split-opacity = 0.80
+
+# --- Cursor (ctOS Tactical Block) ---
+cursor-style = block
+cursor-style-blink = true
+cursor-color = #00F0FF
+cursor-text = #07090E
+
+# --- Watch Dogs ctOS Color Palette (#07090E / #00F0FF / #FF0055) ---
+background = #07090E
+foreground = #E2F1FF
+selection-background = #00F0FF
+selection-foreground = #07090E
+
+# Normal ANSI
+palette = 0=#0B1017
+palette = 1=#FF0055
+palette = 2=#00FF9C
+palette = 3=#FFD600
+palette = 4=#00A8FF
+palette = 5=#D600FF
+palette = 6=#00F0FF
+palette = 7=#C5D8E8
+
+# Bright ANSI
+palette = 8=#2A3A4E
+palette = 9=#FF3377
+palette = 10=#33FFB2
+palette = 11=#FFE44D
+palette = 12=#4DC3FF
+palette = 13=#E24DFF
+palette = 14=#66F7FF
+palette = 15=#FFFFFF
+
+# --- Custom GLSL CRT Scanline + Edge Chromatic Aberration Shader ---
+custom-shader = /home/princetonacelopez/.config/ghostty/shaders/ctos-hud.glsl
+custom-shader-animation = true

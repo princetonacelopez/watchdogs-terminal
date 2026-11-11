@@ -1,0 +1,27 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+*.o
+*.mod
+*.pp
+
+# Local temporary state & caches
+.cache/
+*.tmp
+*.log
+*.bak*
+
+# Secrets & Local credentials
+*secrets.env
+*.env
+x_session.json
+recent_folders.json
+last_session.json
+
+# OS artifacts
+.DS_Store
+Thumbs.db

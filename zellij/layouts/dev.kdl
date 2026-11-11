@@ -1,0 +1,131 @@
+// =============================================================================
+// Watch Dogs ctOS 2.0 / DedSec Fullstack HUD Layout for Zellij (zdev edition)
+// Location: ~/.config/zellij/layouts/dev.kdl (and watchdogs.kdl)
+// Integrates:
+//   - Watch Dogs "HACKED" font on panel titles (via Ghostty font-family-bold)
+//   - Compact Live-Camera Floating FaceID Modal (ctos-faceid-auth) on launch
+//   - Underlying panels start with Watch Dogs blurred/static effect during FaceID
+//     and smoothly fade in (ctos-panel-guard) when FaceID succeeds
+//   - zjstatus.wasm top bar with angled // ctOS_PROFILER powerline glyphs,
+//     live CPU/RAM, session, time, and weather + location after time
+//   - Left Wing (18%):   [Top] ctos-profiler-ace (1:1 Portrait + Ace / Fullstack Developer / WebIT | Offsure / Online)
+//                        [Bottom] ctos-intel-feed (Git Logs + Dev Quotes/Jokes + Open-Source Tech News)
+//   - Center Core (49%): [Top] FULLSTACK_CLI (focus after FaceID auth)
+//                        [Bottom] dymus (YouTube Music — ctOS themed)
+//   - Right Wing (33%):  [Top] lazygit (ctOS themed, before Jira tickets)
+//                        [Middle] jira-project-board (WebIT ctOS TUI)
+//                        [Bottom] bitbucket-prs (webtechit ctOS TUI)
+//   - Tab 2 (CODE_OPS):  Developer CLI + LazyDocker (left) | LazyGit + Jira + Bitbucket PRs (right)
+// =============================================================================
+
+layout {
+    default_tab_template {
+        pane size=1 borderless=true {
+            plugin location="file:/home/princetonacelopez/.config/zellij/plugins/zjstatus.wasm" {
+                format_left   "#[bg=#00F0FF,fg=#07090E,bold] ⌁ ctOS // PROFILER #[fg=#00F0FF,bg=#111926] #[fg=#E2F1FF,bg=#111926,bold]DEDSEC_HUD #[fg=#111926,bg=#07090E] {mode} #[fg=#07090E,bg=#07090E] {tabs}"
+                format_right  "#[fg=#111926,bg=#07090E]{command_ctos}#[fg=#FF0055,bg=#111926]#[bg=#FF0055,fg=#07090E,bold] 󰒋 {session} #[fg=#00F0FF,bg=#FF0055]#[bg=#00F0FF,fg=#07090E,bold] {datetime} #[fg=#111926,bg=#00F0FF]{command_weather}"
+                format_space  "#[bg=#07090E]"
+
+                // Mode indicators (Watch Dogs Tactical Badges)
+                mode_normal        "#[bg=#00FF9C,fg=#07090E,bold]#[bg=#00FF9C,fg=#07090E,bold] NORMAL #[fg=#00FF9C,bg=#07090E]"
+                mode_locked        "#[bg=#FF0055,fg=#07090E,bold]#[bg=#FF0055,fg=#07090E,bold]  LOCKED #[fg=#FF0055,bg=#07090E]"
+                mode_pane          "#[bg=#00F0FF,fg=#07090E,bold]#[bg=#00F0FF,fg=#07090E,bold] PANE_OPS #[fg=#00F0FF,bg=#07090E]"
+                mode_tab           "#[bg=#D600FF,fg=#07090E,bold]#[bg=#D600FF,fg=#07090E,bold] TAB_MATRIX #[fg=#D600FF,bg=#07090E]"
+                mode_resize        "#[bg=#FFD600,fg=#07090E,bold]#[bg=#FFD600,fg=#07090E,bold] RESIZE #[fg=#FFD600,bg=#07090E]"
+                mode_scroll        "#[bg=#00A8FF,fg=#07090E,bold]#[bg=#00A8FF,fg=#07090E,bold] SCROLL #[fg=#00A8FF,bg=#07090E]"
+                mode_search        "#[bg=#FFD600,fg=#07090E,bold]#[bg=#FFD600,fg=#07090E,bold] PROFILER_SEARCH #[fg=#FFD600,bg=#07090E]"
+                mode_enter_search  "#[bg=#FFD600,fg=#07090E,bold]#[bg=#FFD600,fg=#07090E,bold] QUERY #[fg=#FFD600,bg=#07090E]"
+
+                // Inactive tabs
+                tab_normal              "#[fg=#111926,bg=#07090E]#[fg=#7A93AC,bg=#111926] {index} // {name} #[fg=#111926,bg=#07090E]"
+                tab_normal_fullscreen   "#[fg=#111926,bg=#07090E]#[fg=#7A93AC,bg=#111926] {index} // {name} : MAX #[fg=#111926,bg=#07090E]"
+                tab_normal_sync         "#[fg=#111926,bg=#07090E]#[fg=#7A93AC,bg=#111926] {index} // {name} : SYNC #[fg=#111926,bg=#07090E]"
+
+                // Active tab (Electric Cyan ctOS highlight)
+                tab_active              "#[fg=#00F0FF,bg=#07090E,bold]#[bg=#00F0FF,fg=#07090E,bold] {index} // {name} #[fg=#00F0FF,bg=#07090E]"
+                tab_active_fullscreen   "#[fg=#00F0FF,bg=#07090E,bold]#[bg=#00F0FF,fg=#07090E,bold] {index} // {name} : MAX #[fg=#00F0FF,bg=#07090E]"
+                tab_active_sync         "#[fg=#00F0FF,bg=#07090E,bold]#[bg=#00F0FF,fg=#07090E,bold] {index} // {name} : SYNC #[fg=#00F0FF,bg=#07090E]"
+
+                // Live CPU & RAM Telemetry Badge (refreshes every 3s)
+                command_ctos_command    "/home/princetonacelopez/.local/bin/ctos-bar-metrics"
+                command_ctos_format     "#[fg=#00F0FF,bg=#111926,bold]  {stdout} "
+                command_ctos_interval   "3"
+                command_ctos_rendermode "static"
+
+                // Live Clock Badge (Manila / Clark GS Timezone)
+                datetime          "#[fg=#07090E,bg=#00F0FF,bold]{format}"
+                datetime_format   "%H:%M:%S"
+                datetime_timezone "Asia/Manila"
+
+                // Live Weather + Location Badge right after Time
+                command_weather_command    "/home/princetonacelopez/.local/bin/ctos-bar-weather"
+                command_weather_format     "#[fg=#00FF9C,bg=#111926,bold] ⌁ {stdout} "
+                command_weather_interval   "60"
+                command_weather_rendermode "static"
+            }
+        }
+        children
+    }
+
+    // =========================================================================
+    // TAB 01: [ ctOS_HUD_MAIN ] — 7-Pane Watch Dogs 3-Column Command Center
+    // Underlying panes render blurred/static encryption while FaceID modal scans,
+    // then smoothly fade in as soon as FaceID succeeds!
+    // =========================================================================
+    tab name="ctOS_HUD_MAIN" focus=true {
+        pane split_direction="vertical" {
+
+            // LEFT WING (18% — Sized to 1:1 Portrait): Full-Bleed 1:1 Portrait + X Feed
+            pane split_direction="horizontal" size="18%" {
+                pane name="ctOS // PROFILER_ID : ACE" size="48%" command="ctos-profiler-ace"
+                pane name="ctOS // X_FEED" size="52%" command="ctos-intel-feed"
+            }
+
+            // CENTER CORE (49% — Expanded): Primary Fullstack Developer CLI + Bottom YouTube Music (dymus)
+            pane split_direction="horizontal" size="49%" {
+                pane name="DEDSEC_CORE // FULLSTACK_CLI" size="68%"
+                pane name="AUDIO_STREAM // YT_MUSIC" size="32%" command="ctos-panel-guard" {
+                    args "/home/princetonacelopez/.local/bin/ctos-dymus-persist"
+                }
+            }
+
+            // RIGHT WING (33%): AI Agents Squad (top) -> WebIT Jira Tickets -> Bitbucket Cloud PRs
+            pane split_direction="horizontal" size="33%" {
+                pane name="ctOS // AI_AGENTS" size="38%" command="ctos-ai-agents"
+                pane name="JIRA_FEED // WEBIT_SPRINT" size="30%" command="jira-project-board"
+                pane name="BITBUCKET // WEBIT_PR_PIPELINE" size="32%" command="bitbucket-prs"
+            }
+        }
+
+        // Compact Watch Dogs Live-Camera Biometric FaceID Modal on startup (48% x 50% centered)
+        floating_panes {
+            pane name="ctOS // BIOMETRIC_FACEID_AUTH" x="26%" y="24%" width="48%" height="50%" focus=true close_on_exit=true command="ctos-faceid-auth"
+        }
+    }
+
+    // =========================================================================
+    // TAB 02: [ CODE_OPS ] — Code, Containers (LazyDocker), Git, Jira & PRs
+    // =========================================================================
+    tab name="CODE_OPS" {
+        pane split_direction="vertical" {
+            pane split_direction="horizontal" size="55%" {
+                pane name="DEDSEC_CORE // DEVELOPER_CLI" size="58%" focus=true
+                pane name="ctOS // CONTAINER_OPS : LAZYDOCKER" size="42%" command="lazydocker"
+            }
+            pane split_direction="horizontal" size="45%" {
+                pane name="ctOS // GIT_MATRIX : LAZYGIT" size="38%" command="lazygit"
+                pane name="JIRA_FEED // WEBIT_SPRINT" size="31%" command="jira-project-board"
+                pane name="BITBUCKET // WEBIT_PR_PIPELINE" size="31%" command="bitbucket-prs"
+            }
+        }
+    }
+
+    // =========================================================================
+    // FLOATING OVERLAY (Alt + f) — Quick Hack Terminal
+    // =========================================================================
+    swap_floating_layout {
+        floating_panes max_panes=2 {
+            pane name="QUICK_HACK // SCRATCHPAD" x="15%" y="12%" width="70%" height="75%"
+        }
+    }
+}

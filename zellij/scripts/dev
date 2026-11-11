@@ -1,0 +1,189 @@
+#!/usr/bin/env bash
+# dev — Docker Compose helper for Django/Wagtail + node/grunt projects.
+# Python and Node versions live in each project's containers, so nothing
+# here cares which versions a project uses.
+# Per-project overrides: .dev.env next to the compose file (run: dev init)
+set -euo pipefail
+
+usage() {
+  cat <<'USAGE'
+dev <command> [args]
+
+Containers
+  up [svc]          start (detached)          down / stop / restart [svc]
+  ps                list services             logs [svc]     follow logs (default: web)
+  sh [svc]          shell in service (default: web)
+  setup             up --build, npm install, build, migrate
+
+Django / Wagtail (runs in the web service)
+  manage ...        python manage.py ...      migrate / mm (makemigrations)
+  shell             shell_plus if available   su (createsuperuser)
+  static            collectstatic --noinput   test [args]   pytest or manage.py test
+  pip ...           pip inside the container
+
+Assets (runs in the node service, falls back to web)
+  install           npm ci / npm install      build    grunt or npm run build
+  watch             grunt watch / npm run watch|dev
+  npm ... | npx ... | grunt ...
+
+Database
+  dbshell           psql / mysql inside the db service
+  dbdump [file]     dump (.gz supported)      dbrestore <file>
+
+Project
+  init              write .dev.env template   precommit   install pre-commit config
+USAGE
+}
+
+case "${1:-help}" in help|-h|--help) usage; exit 0 ;; esac
+
+COMPOSE_FILES=(compose.yaml compose.yml docker-compose.yaml docker-compose.yml)
+
+find_root() {
+  local d="$PWD" f
+  while [[ "$d" != "/" ]]; do
+    for f in "${COMPOSE_FILES[@]}"; do
+      [[ -f "$d/$f" ]] && { printf '%s\n' "$d"; return 0; }
+    done
+    d="$(dirname "$d")"
+  done
+  return 1
+}
+
+if ! ROOT="$(find_root)"; then
+  echo "dev: no compose file found above $PWD" >&2
+  exit 1
+fi
+cd "$ROOT"
+
+# ---- defaults (override in .dev.env)
+WEB_SERVICE=web
+NODE_SERVICE=node
+DB_SERVICE=db
+DB_ENGINE=postgres   # postgres | mysql
+DB_NAME=
+DB_USER=
+DB_PASS=
+BUILD_CMD=           # empty = auto (grunt if Gruntfile, else npm run build)
+WATCH_CMD=           # empty = auto
+# shellcheck disable=SC1091
+[[ -f .dev.env ]] && source .dev.env
+
+AUTO_BUILD='if [ -f Gruntfile.js ] || [ -f Gruntfile.coffee ]; then npx grunt; else npm run build; fi'
+AUTO_WATCH='if [ -f Gruntfile.js ] || [ -f Gruntfile.coffee ]; then npx grunt watch; elif npm run 2>/dev/null | grep -qE "^  watch$"; then npm run watch; else npm run dev; fi'
+
+dc() { docker compose "$@"; }
+# capture first, then grep: `cmd | grep -q` can SIGPIPE the producer and trip pipefail
+running() { local out; out="$(dc ps --status running --services 2>/dev/null || true)"; grep -qx "$1" <<<"$out"; }
+has_service() { local out; out="$(dc config --services 2>/dev/null || true)"; grep -qx "$1" <<<"$out"; }
+
+# exec in a running service, otherwise one-off container
+in_svc() {
+  local svc="$1"; shift
+  if running "$svc"; then dc exec "$svc" "$@"; else dc run --rm "$svc" "$@"; fi
+}
+
+# always a throwaway container, no deps (fast builds without starting the DB)
+in_node() {
+  local svc="$WEB_SERVICE"
+  has_service "$NODE_SERVICE" && svc="$NODE_SERVICE"
+  dc run --rm --no-deps "$svc" "$@"
+}
+
+db_cmd() { # $1 = dump|restore|shell
+  case "$DB_ENGINE" in
+    postgres)
+      case "$1" in
+        shell)   dc exec "$DB_SERVICE" psql -U "${DB_USER:-postgres}" ${DB_NAME:+"$DB_NAME"} ;;
+        dump)    dc exec -T "$DB_SERVICE" pg_dump -U "${DB_USER:-postgres}" -d "$DB_NAME" --no-owner ;;
+        restore) dc exec -T "$DB_SERVICE" psql -U "${DB_USER:-postgres}" -d "$DB_NAME" ;;
+      esac ;;
+    mysql)
+      case "$1" in
+        shell)   dc exec -e MYSQL_PWD="$DB_PASS" "$DB_SERVICE" mysql -u"${DB_USER:-root}" ${DB_NAME:+"$DB_NAME"} ;;
+        dump)    dc exec -T -e MYSQL_PWD="$DB_PASS" "$DB_SERVICE" mysqldump -u"${DB_USER:-root}" "$DB_NAME" ;;
+        restore) dc exec -T -e MYSQL_PWD="$DB_PASS" "$DB_SERVICE" mysql -u"${DB_USER:-root}" "$DB_NAME" ;;
+      esac ;;
+    *) echo "dev: DB_ENGINE must be postgres or mysql" >&2; exit 1 ;;
+  esac
+}
+
+cmd="${1:-help}"; shift || true
+
+case "$cmd" in
+  # --- containers
+  up)       dc up -d "$@" ;;
+  down)     dc down "$@" ;;
+  stop)     dc stop "$@" ;;
+  restart)  dc restart "${@:-$WEB_SERVICE}" ;;
+  ps)       dc ps ;;
+  logs)     dc logs -f --tail=100 "${@:-$WEB_SERVICE}" ;;
+  sh)       in_svc "${1:-$WEB_SERVICE}" sh -c 'command -v bash >/dev/null 2>&1 && exec bash || exec sh' ;;
+  setup)
+    dc up -d --build
+    "$0" install
+    "$0" build
+    "$0" migrate
+    ;;
+
+  # --- django / wagtail
+  manage|m) in_svc "$WEB_SERVICE" python manage.py "$@" ;;
+  migrate)  in_svc "$WEB_SERVICE" python manage.py migrate "$@" ;;
+  mm)       in_svc "$WEB_SERVICE" python manage.py makemigrations "$@" ;;
+  su)       in_svc "$WEB_SERVICE" python manage.py createsuperuser "$@" ;;
+  static)   in_svc "$WEB_SERVICE" python manage.py collectstatic --noinput "$@" ;;
+  shell)
+    in_svc "$WEB_SERVICE" sh -c 'if python manage.py shell_plus --help >/dev/null 2>&1; then exec python manage.py shell_plus; else exec python manage.py shell; fi'
+    ;;
+  test)
+    in_svc "$WEB_SERVICE" sh -c 'if command -v pytest >/dev/null 2>&1; then exec pytest "$@"; else exec python manage.py test "$@"; fi' sh "$@"
+    ;;
+  pip)      in_svc "$WEB_SERVICE" pip "$@" ;;
+
+  # --- assets
+  install)  in_node sh -c 'if [ -f package-lock.json ]; then npm ci; else npm install; fi' ;;
+  build)    in_node sh -c "${BUILD_CMD:-$AUTO_BUILD}" ;;
+  watch)    in_node sh -c "${WATCH_CMD:-$AUTO_WATCH}" ;;
+  npm)      in_node npm "$@" ;;
+  npx)      in_node npx "$@" ;;
+  grunt)    in_node npx grunt "$@" ;;
+
+  # --- database
+  dbshell)  db_cmd shell ;;
+  dbdump)
+    : "${DB_NAME:?set DB_NAME in .dev.env}"
+    f="${1:-dump-$(date +%F-%H%M).sql}"
+    if [[ "$f" == *.gz ]]; then db_cmd dump | gzip > "$f"; else db_cmd dump > "$f"; fi
+    echo "wrote $f"
+    ;;
+  dbrestore)
+    : "${DB_NAME:?set DB_NAME in .dev.env}"
+    f="${1:?usage: dev dbrestore <file>}"
+    if [[ "$f" == *.gz ]]; then gunzip -c "$f" | db_cmd restore; else db_cmd restore < "$f"; fi
+    ;;
+
+  # --- project
+  init)
+    if [[ -e .dev.env ]]; then echo ".dev.env already exists"; exit 0; fi
+    cat > .dev.env <<'ENV_EOF'
+# dev helper overrides (sourced by bash)
+WEB_SERVICE=web
+NODE_SERVICE=node      # falls back to WEB_SERVICE if this service doesn't exist
+DB_SERVICE=db
+DB_ENGINE=postgres     # postgres | mysql
+DB_NAME=
+DB_USER=
+DB_PASS=
+# BUILD_CMD='npx grunt build'
+# WATCH_CMD='npm run watch'
+ENV_EOF
+    echo "wrote .dev.env (add it to .gitignore if it holds passwords)"
+    ;;
+  precommit)
+    top="$(git rev-parse --show-toplevel)"
+    [[ -e "$top/.pre-commit-config.yaml" ]] || cp "$HOME/.config/dev/pre-commit-config.yaml" "$top/.pre-commit-config.yaml"
+    (cd "$top" && pre-commit install)
+    ;;
+
+  *) echo "dev: unknown command '$cmd'" >&2; usage; exit 1 ;;
+esac

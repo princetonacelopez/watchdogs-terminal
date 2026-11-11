@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# bb [pr|prs|open|pipelines|branches]  — Bitbucket shortcuts for the current repo
+set -euo pipefail
+url="$(git remote get-url origin)"
+slug="$(sed -E 's#^(git@|ssh://git@|https://([^@/]+@)?)bitbucket\.org[:/]##; s#\.git$##' <<<"$url")"
+if [[ "$slug" == "$url" ]]; then
+  echo "bb: origin is not a Bitbucket remote: $url" >&2
+  exit 1
+fi
+base="https://bitbucket.org/$slug"
+branch="$(git branch --show-current)"
+enc="$(jq -rn --arg b "$branch" '$b|@uri')"
+case "${1:-pr}" in
+  pr)        xdg-open "$base/pull-requests/new?source=$enc" ;;
+  prs)       xdg-open "$base/pull-requests/" ;;
+  pipelines) xdg-open "$base/pipelines" ;;
+  branches)  xdg-open "$base/branches/" ;;
+  open|*)    xdg-open "$base" ;;
+esac

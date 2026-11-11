@@ -1,0 +1,37 @@
+gui:
+  nerdFontsVersion: "3"
+  border: "single"
+  showFileTree: true
+  showRandomTip: false
+  showCommandLog: false
+  theme:
+    activeBorderColor:
+      - "#00F0FF"
+      - "bold"
+    inactiveBorderColor:
+      - "#4B627A"
+    searchingActiveBorderColor:
+      - "#FF0055"
+      - "bold"
+    optionsTextColor:
+      - "#00A8FF"
+    selectedLineBgColor:
+      - "#111926"
+    selectedRangeBgColor:
+      - "#111926"
+    cherryPickedCommitBgColor:
+      - "#111926"
+    cherryPickedCommitFgColor:
+      - "#00F0FF"
+    unstagedChangesColor:
+      - "#FF0055"
+    defaultFgColor:
+      - "#E2F1FF"
+    markedBaseCommitFgColor:
+      - "#00FF9C"
+    markedBaseCommitBgColor:
+      - "#111926"
+git:
+  diffRenderers:
+    - colorArg: always
+      command: delta --dark --paging=never

@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# jb PROJ-123 [feature|bugfix|hotfix]
+# Creates (or switches to) a branch named type/PROJ-123-ticket-title from the
+# up-to-date default branch. Title comes from the Jira REST API when
+# ~/.config/dev/secrets.env is filled in, otherwise it asks you.
+set -euo pipefail
+# shellcheck disable=SC1090
+[[ -f "$HOME/.config/dev/secrets.env" ]] && source "$HOME/.config/dev/secrets.env"
+
+key="${1:?usage: jb PROJ-123 [feature|bugfix|hotfix]}"
+key="${key^^}"
+type="${2:-feature}"
+
+existing="$(git for-each-ref --format='%(refname:short)' refs/heads | grep -E "(^|/)$key-" | head -1 || true)"
+if [[ -n "$existing" ]]; then
+  git switch "$existing"
+  exit 0
+fi
+
+summary=""
+if [[ -n "${JIRA_URL:-}" && -n "${JIRA_EMAIL:-}" && -n "${JIRA_API_TOKEN:-}" ]]; then
+  summary="$(curl -fsS -u "$JIRA_EMAIL:$JIRA_API_TOKEN" -H 'Accept: application/json' \
+    "$JIRA_URL/rest/api/3/issue/$key?fields=summary" | jq -r '.fields.summary // empty' || true)"
+fi
+if [[ -z "$summary" ]]; then
+  read -rp "Ticket title: " summary
+fi
+
+slug="$(printf '%s' "$summary" | iconv -f utf8 -t ascii//TRANSLIT 2>/dev/null \
+  | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+|-+$//g' | cut -c1-50 | sed -E 's/-+$//')"
+branch="$type/$key${slug:+-$slug}"
+
+base="${BASE_BRANCH:-$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null | sed 's#^origin/##' || true)}"
+base="${base:-main}"
+git fetch origin "$base"
+git switch -c "$branch" "origin/$base"
+echo "on $branch"

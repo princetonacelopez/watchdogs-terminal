@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# jira-open [KEY]  — open the ticket from the current branch (or the given key)
+set -euo pipefail
+# shellcheck disable=SC1090
+[[ -f "$HOME/.config/dev/secrets.env" ]] && source "$HOME/.config/dev/secrets.env"
+key="${1:-$(git branch --show-current | grep -oE '[A-Z][A-Z0-9]+-[0-9]+' | head -1 || true)}"
+[[ -n "$key" ]] || { echo "jira-open: no ticket key found" >&2; exit 1; }
+[[ -n "${JIRA_URL:-}" ]] || { echo "jira-open: set JIRA_URL in ~/.config/dev/secrets.env" >&2; exit 1; }
+xdg-open "$JIRA_URL/browse/$key"

@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# zdev [dir] — open (or re-attach to) a Zellij dev session with Watch Dogs Live-Camera FaceID modal
+set -euo pipefail
+cd "${1:-$PWD}"
+name="$(printf '%s' "$(basename "$PWD")" | tr -c 'a-zA-Z0-9_-' '-')"
+
+# Record folder in Ghostty startup launcher recent history
+/home/princetonacelopez/.local/bin/ctos-ghostty-welcome --record "$PWD" >/dev/null 2>&1 || true
+
+# Mark panels beneath the modal as LOCKED (blurred/static effect) right as FaceID initiates
+printf '{"state": "LOCKED", "ts": %s}\n' "$(date +%s)" > /tmp/ctos_faceid_state.json
+
+# Asynchronously start/resume project Docker containers & resolve port collisions with other projects
+if [[ -x "/home/princetonacelopez/.local/bin/ctos-docker-manager" ]]; then
+  (/home/princetonacelopez/.local/bin/ctos-docker-manager start "$PWD" >/tmp/ctos_docker_launch.log 2>&1 &)
+fi
+
+# 1. If triggered from INSIDE an already-attached Zellij session, pop the compact FaceID modal directly!
+if [[ -n "${ZELLIJ:-}" ]]; then
+  if ! zellij action dump-layout 2>/dev/null | grep -q "DEDSEC_CORE // FULLSTACK_CLI" || \
+     ! zellij action dump-layout 2>/dev/null | grep -q "ctos-dymus-persist" || \
+     ! zellij action dump-layout 2>/dev/null | grep -q "ctos-ai-agents"; then
+    zellij action override-layout /home/princetonacelopez/.config/zellij/layouts/dev.kdl >/dev/null 2>&1 || true
+  fi
+  exec zellij action new-pane --floating --close-on-exit --name "ctOS // BIOMETRIC_FACEID_AUTH" -x 26% -y 24% --width 48% --height 50% -- /home/princetonacelopez/.local/bin/ctos-faceid-auth
+fi
+
+# 2. If session already exists in background (use --no-formatting to avoid ANSI color codes!),
+#    auto-heal layout if the CLI panel was closed or needs the dymus persistence wrapper,
+#    and spawn the compact floating FaceID modal on attach.
+if zellij list-sessions --no-formatting 2>/dev/null | grep -E "^${name} " | grep -qv "EXITED"; then
+  if ! zellij --session "$name" action dump-layout 2>/dev/null | grep -q "DEDSEC_CORE // FULLSTACK_CLI" || \
+     ! zellij --session "$name" action dump-layout 2>/dev/null | grep -q "ctos-dymus-persist" || \
+     ! zellij --session "$name" action dump-layout 2>/dev/null | grep -q "ctos-ai-agents"; then
+    zellij --session "$name" action override-layout /home/princetonacelopez/.config/zellij/layouts/dev.kdl >/dev/null 2>&1 || true
+  fi
+  (sleep 0.5 && zellij --session "$name" action new-pane --floating --close-on-exit --name "ctOS // BIOMETRIC_FACEID_AUTH" -x 26% -y 24% --width 48% --height 50% -- /home/princetonacelopez/.local/bin/ctos-faceid-auth >/dev/null 2>&1 &)
+  exec zellij attach "$name"
+fi
+
+# 3. Brand-new session: delete any exited remnant, launch dev layout (which opens floating FaceID modal focused)
+zellij delete-session "$name" --force 2>/dev/null || true
+exec zellij --session "$name" --new-session-with-layout dev

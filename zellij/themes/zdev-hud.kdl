@@ -1,0 +1,18 @@
+themes {
+    zdev-hud {
+        text_unselected   { base 139 155 165; background 11 13 14; emphasis_0 251 191 36; emphasis_1 94 234 212; emphasis_2 94 234 212; emphasis_3 248 113 113; }
+        text_selected     { base 11 13 14; background 94 234 212; emphasis_0 11 13 14; emphasis_1 11 13 14; emphasis_2 11 13 14; emphasis_3 11 13 14; }
+        ribbon_selected   { base 11 13 14; background 94 234 212; emphasis_0 11 13 14; emphasis_1 11 13 14; emphasis_2 11 13 14; emphasis_3 11 13 14; }
+        ribbon_unselected { base 139 155 165; background 20 24 27; emphasis_0 251 191 36; emphasis_1 94 234 212; emphasis_2 94 234 212; emphasis_3 248 113 113; }
+        table_title       { base 94 234 212; background 0; emphasis_0 251 191 36; emphasis_1 94 234 212; emphasis_2 94 234 212; emphasis_3 248 113 113; }
+        table_cell_selected   { base 11 13 14; background 94 234 212; emphasis_0 11 13 14; emphasis_1 11 13 14; emphasis_2 11 13 14; emphasis_3 11 13 14; }
+        table_cell_unselected { base 139 155 165; background 11 13 14; emphasis_0 251 191 36; emphasis_1 94 234 212; emphasis_2 94 234 212; emphasis_3 248 113 113; }
+        list_selected     { base 11 13 14; background 94 234 212; emphasis_0 11 13 14; emphasis_1 11 13 14; emphasis_2 11 13 14; emphasis_3 11 13 14; }
+        list_unselected   { base 139 155 165; background 11 13 14; emphasis_0 251 191 36; emphasis_1 94 234 212; emphasis_2 94 234 212; emphasis_3 248 113 113; }
+        frame_selected    { base 94 234 212; background 0; emphasis_0 251 191 36; emphasis_1 94 234 212; emphasis_2 94 234 212; emphasis_3 248 113 113; }
+        frame_unselected  { base 35 42 46; background 0; emphasis_0 35 42 46; emphasis_1 94 234 212; emphasis_2 94 234 212; emphasis_3 248 113 113; }
+        frame_highlight   { base 94 234 212; background 0; emphasis_0 94 234 212; emphasis_1 94 234 212; emphasis_2 94 234 212; emphasis_3 94 234 212; }
+        exit_code_success { base 94 234 212; background 0; emphasis_0 94 234 212; emphasis_1 94 234 212; emphasis_2 94 234 212; emphasis_3 94 234 212; }
+        exit_code_error   { base 248 113 113; background 0; emphasis_0 248 113 113; emphasis_1 248 113 113; emphasis_2 248 113 113; emphasis_3 248 113 113; }
+    }
+}

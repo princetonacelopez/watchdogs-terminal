@@ -1,0 +1,15 @@
+gui:
+  border: "single"
+  returnImmediately: true
+  theme:
+    activeBorderColor:
+      - "#00F0FF"
+      - "bold"
+    inactiveBorderColor:
+      - "#4B627A"
+    selectedLineBgColor:
+      - "#111926"
+    optionsTextColor:
+      - "#00A8FF"
+    defaultFgColor:
+      - "#E2F1FF"

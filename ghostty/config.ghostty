@@ -1,0 +1,5 @@
+# Neutral default Ghostty config: no custom theme/shader/opacity.
+# Styled windows are opened on demand (see ~/.bashrc chooser):
+#   ctOS HUD : ghostty --config-file=~/.config/ghostty/ctos.ghostty ...   (zdev-window)
+#   Rex glass: ghostty --config-default-files=false --config-file=~/.config/ghostty/rex.ghostty ...  (zrex --window)
+font-family = "JetBrainsMono Nerd Font Mono"

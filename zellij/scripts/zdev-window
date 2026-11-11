@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# zdev-window [dir] — open zdev in a NEW Ghostty window with the ctOS HUD style (zdev itself unchanged).
+set -euo pipefail
+dir="$(cd "${1:-$PWD}" && pwd)"
+exec env CTOS_WELCOME_SHOWN=1 ghostty --config-file="$HOME/.config/ghostty/ctos.ghostty" \
+  --title=ctOS --class=com.ctos.dev -e "$HOME/.local/bin/zdev" "$dir"
