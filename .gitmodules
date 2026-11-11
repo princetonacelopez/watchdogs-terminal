@@ -1,0 +1,3 @@
+[submodule "faceid"]
+	path = faceid
+	url = git@github.com:princetonacelopez/FaceID.git
